@@ -1,0 +1,43 @@
+from datetime import datetime
+from flask import Flask,render_template
+from flask_sqlalchemy import SQLAlchemy
+app = Flask(__name__)
+app.debug=True
+app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///./db/test.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=True #跟踪改变的
+
+
+db=SQLAlchemy(app)  #数据库的核心对象
+#db.init_app(app)  #初始化绑定app对象
+
+
+class User(db.Model):#db.Model给我们做了一些后台的工作
+    __tablename__='user' # 这是sqlalchemy里给我们准备的，没有特殊情况的话，它会自动生成一个小写字母‘u'开头的'user'表名
+    id=db.Column(db.Integer,primary_key=True)   #这里表示一会儿给我们建成表时的类型。现在写python的类，但是要告诉它在数据库的类型
+    username=db.Column(db.String(50),unique=True)
+    email=db.Column(db.String(20),unique=True)
+    password=db.Column(db.String(100))
+    created_time=db.Column(db.DATETIME,default=datetime.now) #会自动映射记住不要写括号
+    def __init__(self,username,email,password,created_time=datetime.now()):
+        self.username=username
+        self.email=email
+        self.password=password
+        self.created_time=created_time
+    def __repr__(self):
+        return '<用户:{}{}{}>'.format(self.id,self.username,self.email)
+
+
+@app.route('/user/')
+def user_list():
+    users=db.session.query(User).all()
+    return render_template('user.html',users=users)
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
+
+
+if __name__ == '__main__':
+    app.run()
+
+一写要牢记它的顺序
